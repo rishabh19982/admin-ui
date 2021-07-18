@@ -16,55 +16,81 @@ class Home extends React.Component  {
                 pageSize: 10,
             },
             searchText: '',
-            selectedRowKeys:[]
+            selectedRowKeys:[],
+            editingKey: 0
         }
         
     }
 
-    handleSingleDelete = (record) => {
-        //console.log('Deleted handled');
-        let selectedRowKeys = [];
-        selectedRowKeys.push(record.id);
+    cancel = () => {
+        this.setState({editingKey:0});
+    }
+
+    isEditing = (record) => {
+        return record.id === this.state.editingKey;
+    }
+
+    setEditingKey = (recordKey) => {
+        this.setState({editingKey:recordKey});
+    }
+    handleDeleteMain = (selectedRowKeys) => {
         let originalData = this.state.data;
+        let filteredData = this.state.filteredData;
         let updatedData = originalData.filter((row)=>{
             if(selectedRowKeys.includes(row.id)){
-                console.log()
                return false; 
             }
             return true;
         })
-        this.setState({data:updatedData});
+        let updatedfileredData = filteredData.filter((row)=>{
+            if(selectedRowKeys.includes(row.id)){
+               return false; 
+            }
+            return true;
+        })
+        this.setState({data:updatedData,filteredData:updatedfileredData});
+    }
+
+    handleSingleDelete = (record) => {
+        let selectedRowKeys = [];
+        selectedRowKeys.push(record.id);
+        this.handleDeleteMain(selectedRowKeys);
     }
 
     handleMultipleDelete = () => {
-        //console.log('Deleted handled');
         let selectedRowKeys = this.state.selectedRowKeys;
-        let originalData = this.state.data;
-        let updatedData = originalData.filter((row)=>{
-            if(selectedRowKeys.includes(row.id)){
-                console.log()
-               return false; 
-            }
-            return true;
-        })
-        this.setState({data:updatedData});
+        this.handleDeleteMain(selectedRowKeys);    }
+
+    save = (recordKey,row)=>{
+        let data = [...this.state.data];
+        let filteredData = [...this.state.filteredData];
+        let index = data.findIndex((item) => item.id === recordKey);
+        let filteredDataIndex = filteredData.findIndex((item) => item.id === recordKey);
+       
+        if(index > -1){
+            const item = data[index];
+            data.splice(index, 1, { ...item, ...row });
+            
+        }
+        if(filteredDataIndex > -1){
+            const item = filteredData[filteredDataIndex];
+            filteredData.splice(filteredDataIndex, 1, { ...item, ...row });
+            
+        }
+        this.setState({filteredData:filteredData,data:data,editingKey:0});   
     }
 
     rowSelectionFunctions = {
-        onChange: (selectedRowKeys, selectedRows) => {
-          // console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-          this.setState({selectedRowKeys})
+        onChange: (selectedRowKeys) => {
+          this.setState({selectedRowKeys:selectedRowKeys})
         }
     };
 
     search = (text) => {
          let data = this.state.data;
          const filteredData = data.filter((row) => {
-           // console.log(row)
            return row.name.toLowerCase().includes(text.toLowerCase()) || row.email.toLowerCase().includes(text.toLowerCase()) || row.role.toLowerCase().includes(text.toLowerCase());
          })
-         // console.log(filteredData);
-     
          this.setState({filteredData:filteredData});
     };
 
@@ -72,10 +98,9 @@ class Home extends React.Component  {
         const text = event.target.value;
         clearTimeout(this.debounceTimeout);
         this.debounceTimeout = setTimeout(() => {
-          // clearTimeout(this.debounceTimeout);
           this.search(text);
         },300);
-        // console.log(text);
+        
     };
     
 
@@ -100,8 +125,7 @@ class Home extends React.Component  {
             onChange:(current) => {
                 let oldpagination = this.state.pagination;
                 oldpagination.current = current;
-                this.setState({pagination:oldpagination});
-                //console.log(this.state.pagination);
+                this.setState({pagination:oldpagination});  
             }
         }
         return (
@@ -111,7 +135,10 @@ class Home extends React.Component  {
                     handleChange={this.debounceSearch} handleSearch={this.search} />
                 <div className="flex-container">
                     <TableComponent rowSelection={rowSelection} data={this.state.filteredData} 
-                        pagination={pagination} handleDelete={this.handleSingleDelete}/>
+                        pagination={pagination} handleDelete={this.handleSingleDelete} save={this.save}
+                        cancel={this.cancel} isEditing={this.isEditing} editingKey={this.state.editingKey}
+                        setEditingKey={this.setEditingKey} 
+                        />
                 </div>
             </>
         );

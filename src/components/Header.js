@@ -8,9 +8,9 @@ export default function Header(props) {
     return (
         <>
         <div className="header">
-            <Button onClick={props.handleDelete}>Delete selected</Button>
-            <div className="searchBar">
-                <Search searchText={props.searchText} className="searchBar" handleChange={props.handleChange} handleSearch={props.handleSearch}/>
+            <Button type="primary" onClick={props.handleDelete} id="delete-btn" danger>Delete selected</Button>
+            <div className="search-bar">
+                <Search searchText={props.searchText} handleChange={props.handleChange} handleSearch={props.handleSearch}/>
             </div> 
         </div>
         </>
